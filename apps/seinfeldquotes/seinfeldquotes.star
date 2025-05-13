@@ -141,6 +141,7 @@ def main():
             pad = 1,
             child = render.Marquee(
                 height = 30,
+                speed = 0.5,  # Lower value = slower scroll; try values between 0.1 and 1.0
                 child = render.Column(
                     cross_align = "center",
                     children = [
