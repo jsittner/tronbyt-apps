@@ -137,6 +137,7 @@ def main():
     current_fact = QUOTES[idx]
 
     return render.Root(
+        delay = 5,  # Adjust this value to control scroll speed
         child = render.Padding(
             pad = 1,
             child = render.Marquee(
@@ -149,8 +150,8 @@ def main():
                         render.WrappedText(current_fact, width = 62),
                     ],
                 ),
-                offset_start = 20,  # Increased from 8
-                offset_end = 20,    # Increased from 0
+                offset_start = 8,
+                offset_end = 0,
                 scroll_direction = "vertical",
             ),
         ),
