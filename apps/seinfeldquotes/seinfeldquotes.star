@@ -137,7 +137,7 @@ def main():
     current_fact = QUOTES[idx]
 
     return render.Root(
-        delay = 5,  # Adjust this value to control scroll speed
+        delay = 200,  # Adjust this value to control scroll speed
         child = render.Padding(
             pad = 1,
             child = render.Marquee(
