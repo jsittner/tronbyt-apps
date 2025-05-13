@@ -149,8 +149,8 @@ def main():
                         render.WrappedText(current_fact, width = 62),
                     ],
                 ),
-                offset_start = 8,
-                offset_end = 0,
+                offset_start = 20,  # Increased from 8
+                offset_end = 20,    # Increased from 0
                 scroll_direction = "vertical",
             ),
         ),
