@@ -505,6 +505,7 @@ def main(config):
             ),
         )
     else:
+        print("nothing to display")
         return []
 
 teamOptions = [
@@ -515,6 +516,10 @@ teamOptions = [
     schema.Option(
         display = "Arizona Diamondbacks",
         value = "ARI",
+    ),
+    schema.Option(
+        display = "Athletics",
+        value = "ATH",
     ),
     schema.Option(
         display = "Atlanta Braves",
@@ -587,10 +592,6 @@ teamOptions = [
     schema.Option(
         display = "New York Yankees",
         value = "NYY",
-    ),
-    schema.Option(
-        display = "Oakland Athletics",
-        value = "OAK",
     ),
     schema.Option(
         display = "Philadelphia Phillies",
@@ -838,6 +839,7 @@ def get_scores(urls, team):
     allscores = []
     gameCount = 0
     for i, s in urls.items():
+        print(s)
         data = get_cachable_data(s)
         decodedata = json.decode(data)
         allscores.extend(decodedata["events"])
@@ -973,6 +975,7 @@ def get_shortened_display(text):
 def get_cachable_data(url, ttl_seconds = CACHE_TTL_SECONDS):
     res = http.get(url = url, ttl_seconds = ttl_seconds)
     if res.status_code != 200:
-        fail("request to %s failed with status code: %d - %s" % (url, res.status_code, res.body()))
+        print("request to %s failed with status code: %d - %s" % (url, res.status_code, res.body()))
+        fail()
 
     return res.body()

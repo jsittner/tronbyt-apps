@@ -1,4 +1,4 @@
-# WoW Character Stats for Tidbyt
+# WoW Character Stats
 Show statistics for a World of Warcraft character. 
 
 Stats shown include 
@@ -10,4 +10,8 @@ Stats shown include
 - Mythic+ rating
 - Raid progress
 
-![WoW Character Stats for Tidbyt](wowcharacterstats.gif)
+For testing via pixlet serve:   http://127.0.0.1:8080/?region=<region>&character=<character>&realm=<realm>&client=<client>&secret=<secret>
+
+Client and Secret can be obtained by creating an account via https://community.developer.battle.net/ and creating a client
+
+![WoW Character Stats](wowcharacterstats.gif)

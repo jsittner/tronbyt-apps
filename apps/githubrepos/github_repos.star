@@ -64,6 +64,7 @@ iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAYAAAChS3wfAAAACXBIWXMAAAsTAAALEwEAmpwYAAAKaElE
 DEFAULT_BRANCH = "main"
 
 def should_show_jobs(repos, dwell_time):
+    """Check if we should show all jobs (all-or-nothing logic)"""
     print("dwell time is " + str(dwell_time))
     if dwell_time == 0:
         return True
@@ -73,18 +74,30 @@ def should_show_jobs(repos, dwell_time):
         if "data" not in repo:
             continue
         job = repo["data"]
-        if job.get("conclusion", "unknown") != "success":
+        repo_name = str(repo.get("name", "unknown"))
+        conclusion = str(job.get("conclusion", "unknown"))
+        status = str(job.get("status", "unknown"))
+        print("repo " + repo_name + " has conclusion: " + conclusion + ", status: " + status)
+
+        # Show all repos if any repo is not success (including cancelled)
+        if conclusion not in ["success","cancelled"]:
+            print("repo " + repo_name + " is not success, showing all jobs")
             return True
+
+        # Show all repos if any success is recent
         updated_at = time.parse_time(job["updated_at"], format = "2006-01-02T15:04:05Z").in_location("UTC")
         duration = now - updated_at
-        print("comparing " + str(duration.seconds) + " and " + str(dwell_time * 60))
+        print("comparing " + str(duration.seconds) + " and " + str(dwell_time * 60) + " for repo " + repo_name)
         if duration.seconds <= dwell_time * 60:
+            print("repo " + repo_name + " success is recent, showing all jobs")
             return True
         else:
-            print("all successes are old")
+            print("repo " + repo_name + " success is old")
+
+    print("all repos have old successes, hiding all jobs")
     return False
 
-def get_status_icon(status):
+def get_status_icon(status,conclusion):
     """Gets the decoded icon string for a given Workflow Status from github
 
     Args:
@@ -94,10 +107,10 @@ def get_status_icon(status):
     Returns:
     The appropriate icon string
     """
-    if status == "completed" or status == "success":
-        return GITHUB_SUCCESS_ICON
-    elif status == "failed" or status == "timed_out":
+    if status == "failed" or status == "timed_out" or conclusion == "failure":
         return GITHUB_FAILED_ICON
+    elif status == "completed" or status == "success":
+        return GITHUB_SUCCESS_ICON
     elif (
         status == "cancelled" or
         status == "skipped" or
@@ -148,6 +161,7 @@ def fetch_workflow_data(repos, access_token):
                 return ("error", data.get("message"))
         else:
             data = json.decode(TEST_RUN)
+
         if data and data.get("workflow_runs"):
             repo_copy = {
                 "owner": repo["owner"],
@@ -170,6 +184,7 @@ def render_status_badge(status, repos):
     if type(repos) == "list":
         for repo in repos:
             status = repo["data"]["status"]
+            conclusion = repo["data"]["conclusion"]
             print("appending row " + status)
             rows.append(
                 render.Row(
@@ -182,7 +197,7 @@ def render_status_badge(status, repos):
                                 font = "tom-thumb",
                             ),
                         ),
-                        render.Image(src = get_status_icon(status)),
+                        render.Image(src = get_status_icon(status,conclusion)),
                     ],
                 ),
             )
@@ -270,9 +285,13 @@ def main(config):
         #     return render_status_badge("success", "no data")
 
     elif workflow_data and type(workflow_data) != "string":
-        if not should_show_jobs(workflow_data, int(config.get("timeout", "0"))):
+        should_show = should_show_jobs(workflow_data, int(config.get("timeout", "0")))
+        print("should_show_jobs returned: " + str(should_show))
+        if not should_show:
+            print("hiding all jobs, returning empty")
             return []
 
+        print("showing all jobs")
         return render_status_badge("success", workflow_data)
     elif workflow_data:
         return render_status_badge("failed", workflow_data)

@@ -9,7 +9,6 @@ load("cache.star", "cache")
 load("encoding/base64.star", "base64")
 load("encoding/json.star", "json")
 load("http.star", "http")
-load("humanize.star", "humanize")
 load("render.star", "render")
 load("schema.star", "schema")
 load("time.star", "time")
@@ -22,7 +21,7 @@ def main(config):
     f_selector = config.bool("fahrenheit_temperatures", False)
 
     # API URL
-    apiURL = "https://www.aviationweather.gov/cgi-bin/data/metar.php?ids=" + airport + "&format=json"
+    apiURL = "https://www.aviationweather.gov/api/data/metar?requestType=retrieve&format=json&ids=%s&mostrecentforeachstation=constraint&hoursBeforeNow=2"
 
     # Store cahces by airport. That way if two users are pulling the same airport's METAR it is only fetched once.
     cacheName = "metar/" + airport
@@ -37,7 +36,7 @@ def main(config):
     else:
         print("No cached metar data found for " + cacheName)
 
-        rep = http.get(apiURL)
+        rep = http.get(apiURL % airport)
 
         if rep.status_code != 200:
             fail("API Error: Failure")
@@ -62,10 +61,39 @@ def main(config):
     minute = int(decodedObservationMetar[14:16])
     second = int(decodedObservationMetar[17:19])
 
-    observationDate = time.time(year = year, month = month, day = day, hour = hour, minute = minute, second = second, location = "Etc/UTC")
+    # Create observation time in UTC
+    observationDate = time.time(
+        year = year,
+        month = month,
+        day = day,
+        hour = hour,
+        minute = minute,
+        second = second,
+        location = "Etc/UTC",
+    )
 
-    # Create "humanized" readout. Ex; "5 minutes ago"
-    humanizedTime = humanize.time(observationDate)
+    # Current UTC time
+    nowUTC = time.now(location = "Etc/UTC")
+
+    # This used to work, presumably because the tidbyt servers that ran the code were set
+    # to UTC. However, when running on an arbitrary server, like a pi, the timezone cannot
+    # be guaranteed to be set that way. humantize.time() uses time.now(), we we cannot use it.
+    # The proper fix would be to modify humanize.time to take two timezones, but for now we can do it ourselves.
+
+    # Calculate difference in seconds
+    diff = nowUTC.unix - observationDate.unix
+
+    # Then format a humanized string manually
+    if diff < 60:
+        humanizedTime = "%d seconds ago" % diff
+    elif diff < 3600:
+        humanizedTime = "%d minutes ago" % (diff // 60)
+    elif diff < 86400:
+        humanizedTime = "%d hours ago" % (diff // 3600)
+    else:
+        humanizedTime = "%d days ago" % (diff // 86400)
+
+    print(humanizedTime)
 
     #Icon
     cacheName = getFlightCategory(decodedMetar) + "/" + str(getWindDirection_value(decodedMetar))
@@ -482,7 +510,7 @@ def getWindSpeed(decodedMetar):
         windSpeedText = "Calm"
 
     # Set wind gust variable
-    if decodedMetar["wgst"] != None:
+    if decodedMetar.get("wgst", None) != None:
         windGust = int(decodedMetar["wgst"])
         windSpeedText = str(windSpeed) + "-" + str(windGust) + "kts"
 
@@ -498,7 +526,7 @@ def getWindSpeed(decodedMetar):
 
 # Returns raw wind direction value.
 def getWindSpeed_value(decodedMetar):
-    return int(decodedMetar["wspd"])
+    return int(decodedMetar.get("wspd", 0))
 
 # Returns wind direction in degrees
 def getWindDirection(decodedMetar):
@@ -523,7 +551,7 @@ def getWindDirection(decodedMetar):
 
 # Returns raw wind direction value.
 def getWindDirection_value(decodedMetar):
-    return str(int(decodedMetar["wdir"]))
+    return str(int(decodedMetar.get("wdir", 0)))
 
 # Returns current flight category.
 def getFlightCategory(decodedMetar):
@@ -660,7 +688,7 @@ def getCloudCeiling_textColor(ceilingHeight):
     return ceilingColor
 
 def wxDisplay(decodedMetar):
-    presentWeather = decodedMetar["wxString"]
+    presentWeather = decodedMetar.get("wxString", None)
 
     result = "empty"
     color = getTextColor(decodedMetar)
