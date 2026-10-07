@@ -3,7 +3,6 @@ Applet: ARC Raid Events
 Summary: ARC Raiders event timers
 Description: Displays active and upcoming ARC Raiders in-game events with live countdown timers. Features official brand colors, logo-stripe accents, scrolling event names, and map locations. Filter by map and server region with the configurable dropdowns. Data sourced from MetaForge.app.
 Author: jeffver
-:)
 """
 
 load("cache.star", "cache")
@@ -15,6 +14,7 @@ load("time.star", "time")
 
 API_URL = "https://metaforge.app/api/arc-raiders/events-schedule"
 CACHE_TTL = 300  # 5 minutes
+MAX_ACTIVE = 6  # max concurrent events to cycle through (6 maps, ~4s each)
 
 # Server region. Map conditions run on per-region schedules since patch 1.42.0.
 # MetaForge defaults to "europe" when no region is sent.
@@ -170,7 +170,7 @@ def main(config):
 
     # Build event list for display
     display_events = []
-    for event in active_events[:3]:
+    for event in active_events[:MAX_ACTIVE]:
         display_events.append({
             "name": event["name"],
             "map": event["map"],
