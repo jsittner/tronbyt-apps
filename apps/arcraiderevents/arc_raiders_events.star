@@ -14,6 +14,7 @@ load("time.star", "time")
 
 API_URL = "https://metaforge.app/api/arc-raiders/events-schedule"
 CACHE_TTL = 300  # 5 minutes
+MAX_ACTIVE = 6  # max concurrent events to cycle through (6 maps, ~4s each)
 
 # Server region. Map conditions run on per-region schedules since patch 1.42.0.
 # MetaForge defaults to "europe" when no region is sent.
@@ -169,7 +170,7 @@ def main(config):
 
     # Build event list for display
     display_events = []
-    for event in active_events[:3]:
+    for event in active_events[:MAX_ACTIVE]:
         display_events.append({
             "name": event["name"],
             "map": event["map"],
