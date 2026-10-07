@@ -5,18 +5,15 @@ Description: Display track details and artwork from any Home Assistant media_pla
 Author: drudge, gabe565
 """
 
-load("encoding/base64.star", "base64")
 load("http.star", "http")
-load("render.star", "render", "canvas")
+load("images/default_cover.png", DEFAULT_COVER_ASSET = "file")
+load("images/default_cover_2x.png", DEFAULT_COVER_2X_ASSET = "file")
+load("render.star", "canvas", "render")
 load("schema.star", "schema")
 
-DEFAULT_IMAGE = """
-iVBORw0KGgoAAAANSUhEUgAAABEAAAARCAMAAAAMs7fIAAAAGFBMVEVHcEz///////////////////////////8dS1W+AAAAB3RSTlMAAQMCBvYFRZBFoAAAAElJREFUGJWNj0sSwCAIQxNtm/vf2LGOQ0QXZgPz+ASAS2kKKANEKYL0GRKIf8LI2PRsRAxSMK1ST80ENlVPXi97SjtxzWh/3akBR3MCH53fHWkAAAAASUVORK5CYII=
-"""
+DEFAULT_IMAGE = DEFAULT_COVER_ASSET.readall()
 
-DEFAULT_IMAGE_2X = """
-iVBORw0KGgoAAAANSUhEUgAAACQAAAAkAgMAAACcbnALAAAACVBMVEUAAAD///8mRckgsHh3AAAAA3RSTlP//wDXyg1BAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAZUlEQVQYlY3QsQ3AMAgEQC8JBSOwD9nARZgybyfhG6TEhXWSwXoY+Z7xXyEiunTKOg5NwxOukbGrFDq2D0gzHG2QZaBy3tKSUF6ykpaE8kZNhzU/NwmeVEzK9JyIU3LyvQ372toF2su87R8cvrAAAAAASUVORK5CYII=
-"""
+DEFAULT_IMAGE_2X = DEFAULT_COVER_2X_ASSET.readall()
 
 SCROLL_TOGETHER = "together"
 SCROLL_SEPARATE = "separate"
@@ -24,12 +21,8 @@ SCROLL_DISABLED = "disabled"
 DEFAULT_SCROLL = SCROLL_TOGETHER
 
 def get_entity_status(ha_server, entity_id, token):
-    if not ha_server:
-        fail("Home Assistant server not configured")
-    if not entity_id:
-        fail("Entity ID not configured")
-    if not token:
-        fail("Bearer token not configured")
+    if not ha_server or not entity_id or not token:
+        return None
 
     rep = http.get("%s/api/states/%s" % (ha_server, entity_id), headers = {
         "Authorization": "Bearer %s" % token,
@@ -48,7 +41,7 @@ def render_text_widget(content, width, color = "", font = "", scroll = DEFAULT_S
     )
 
     if scroll == SCROLL_DISABLED:
-      return text
+        return text
 
     offset = width if scroll == SCROLL_TOGETHER else 0
     return render.Marquee(
@@ -113,7 +106,9 @@ def main(config):
     entity_status = get_entity_status(ha_server, entity_id, token)
 
     if not entity_status:
-        return []
+        return render.Root(
+            child = render.WrappedText("Config missing or API error", color = "#ff0000"),
+        )
 
     status = entity_status.get("state")
     attributes = entity_status.get("attributes", dict())
@@ -137,7 +132,7 @@ def main(config):
             if res.status_code == 200:
                 media_image = res.body()
         if not media_image:
-            media_image = base64.decode(DEFAULT_IMAGE_2X if scale >= 2 else DEFAULT_IMAGE)
+            media_image = DEFAULT_IMAGE_2X if scale >= 2 else DEFAULT_IMAGE
 
     media_content_type = attributes.get("media_content_type")
     media_artist = attributes.get("media_artist")
@@ -173,7 +168,7 @@ def main(config):
             children = [
                 render.Padding(
                     pad = (pad, 2, 0 if show_art else pad, 0),
-                    child = render_text_widget(media_title, 60 * scale, color = get_title_color(app_name), font = font, scroll = scroll)
+                    child = render_text_widget(media_title, 60 * scale, color = get_title_color(app_name), font = font, scroll = scroll),
                 ),
                 render.Padding(
                     pad = (pad, 2, 0 if show_art else pad, 0),
@@ -254,7 +249,7 @@ def get_schema():
                         display = "Disabled",
                         value = SCROLL_DISABLED,
                     ),
-                ]
+                ],
             ),
         ],
     )

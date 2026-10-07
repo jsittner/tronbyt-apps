@@ -5,14 +5,17 @@ Description: Display count and contents of Severe Weather Alerts issued by the U
 Author: aschechter88
 """
 
-load("cache.star", "cache")
-load("encoding/base64.star", "base64")
 load("encoding/json.star", "json")
 load("http.star", "http")
+load("images/exclamationpoint_img.png", EXCLAMATIONPOINT_IMG_ASSET = "file")
+load("images/warning_img.png", WARNING_IMG_ASSET = "file")
 load("math.star", "math")
-load("render.star", "render", "canvas")
+load("render.star", "canvas", "render")
 load("schema.star", "schema")
 load("time.star", "time")
+
+EXCLAMATIONPOINT_IMG = EXCLAMATIONPOINT_IMG_ASSET.readall()
+WARNING_IMG = WARNING_IMG_ASSET.readall()
 
 DEFAULT_LOCATION = """
 {
@@ -22,10 +25,16 @@ DEFAULT_LOCATION = """
 }
 """
 
-EXCLAMATIONPOINT_IMG = base64.decode("iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAAA6FJREFUeF7tnFty6zAMQ5MN3P2vsxtIJ5600+ZaEiWRIFijv1VsGkfgQ/HkftMflQJ3qmgUzE1AyDaBgAgImQJk4cghAkKmAFk4coiAkClAFo4cIiBkCpCF8xcc8mhoWvLZSgb9A0ALxnNJyWcrGbQRSEkolYH03PHFrNzzlQt4wh1yCLBhsbhDQEBArDBKpq2KKUtAQDvfcptRm1t+JqnkkFOxHx+/Od7/nXIt85xVAjXB+C4ahaFcCUiJrqsCkCl3VHfJ1YDQu4QdyJI7KrukHJD3rmrUK1frupiBbLlj4BLa1FUKyKw7KqYuViAu7qjoEkYgrjCqueQyQI6iUWCCZwMS4o5KqYseyGohb7XD7C5hAhLqjp+AmKGwAIHBYK8llwTCDIUBCNQdhgKfOsVTAvEu5JMFPvXliGwgKe4wFPg0l2QC2YbR6JYOva0u61wjRZuUm752KAWQToFPcUkWkG0YAyHNDhGQ26357tTjo/m/83d7zs+mplKWoeuCblrozbxSlUHEKYcwnQijgbikKjAQaC0RkLdkmH3OhQTi6g7Pos40l6CAuBVyo3hLNYShlqQCsQ5vK0cfgdcO1Sz04t5d1TsYj0l9AXaoZqEXf55gtB54dwdH1RBDSgzVLPLioTAQQDr3CNMt7MIdd9xnJ/KFtLJV1A0uCZtNooCEuwPlELRLIoBAYBAACXGJgLTyYdIEDwPi0VUh294zTohjFW8gIRN5ZlFHF3gIkAh3IGsIEoonEKg7BKRf/GCdlbEGhy6LfDHCyyHuR+uhijpcPAqKB5BLuWNwRL89m+wCuSSMSCgCspG+esf/qz/CuQPk0u6Icok7kKiZY2Mjh3/Uc4JfBQKfOSaOMo6lyI3h2XF5AnH7nsO6pSO/wrXG4J26VoBQuCNrUu+B8khds0CoCjmTQwYbxKyzeeFrZ9C4g9EhnZjMOpsXRr9BMpuziwExT/DbQJDdzDs0tpTlUeCtQKhqx4qb0J9ZLfAWIIKxQHN1NhGQBbGtH1lxyQiI3GFV/2Tdikt6QJow0EcTG5qkf3TWJUtAMjurdIUnA5h1SQtIzx3wM6tJDaiWCwgVjuNnBZ+bvnnC8d9sdRJ/1x2v+tGtL2SapIYTDST14f7ozX+VjbMaot2PJS8gWL2HdxOQoUTYBUMgR91+i2k00WMfofbdutpKaDK4AiIgZAqQhSOHCAiZAmThyCECQqYAWThyiICQKUAWjhwiIGQKkIXzCePGFnRmQM7hAAAAAElFTkSuQmCC")
-WARNING_IMG = base64.decode("iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAABABJREFUeF7t3G1u1DAQBuBUojeBU8DxyyngJiBRpSKrNBvb8/HOeGwPv1CbeNN5/I6dbLsvW/4LVYGXUFeTF7MlSLBJEAnkX6faRKpB14T0Ami5dwXq8eJRIa5QPWrjlpBREErpccOxfqHRIdxTYwkyG8aBY1kzk5Y1K4RLWtDabhhvX77e9vsff3+3dlHI76PrB0uIKUSp+NTKOiDBYBADwTG0AC0oIyBELdUJgWJYQ1yhDGDUKJoBIBjeCKX0AHE0NRUnRI0RBcIoNWIUyYnTYhw4oLRIastOiAojaioM2xgbhXPCUhjAtHBqTE6IGGO0VBilhYxCOXB5DFBaKLUmJUQEMksygLswCEhi3PQwxS6siVI7IDEqz2CsUKAgs7Yp8EJfTUnpm+x0rIahXOiLKBCQVTEUKCwQVjpWx0Cj3EklSOsNFczO6zYl1y8mhgADmRIxSO9W9f3Pr2rpfr5+U5RWfipzO/yUkvMXhkrHJCC7/CcUEUjvdOw/RVSQ/do0KUkQeXcqnukKEiEd0ROiSQk7IQlCi5Q0JSyQKBgjJISZkodDgtAmvOgoRkr4IJHSMUpCGClJENGUF5zETQm5ZWVCBBq8e5IPCxJINIyRWha3bSWIbOKzziK2rUwIq6qKgxNk27ZeT3vv3BJkZpCIC/poizpxYaetIQmiWDxOpxLaVoJgSk0bJUE6vYVb4kmQBKFFF3VU5LdwhVtf2hqyDx5xYR8JhNCuHo+x8tEJKrKVcZYAcagj7CUSBFZKzEAJgqkjbBQ4SNSFHVYxw4GIGLxFPUHkYgkir53JmUQQ/i85ZEr4XkSMR7v69J9t25q//R7xBpFfJr8zzEEipST6nToDQ56QBKGnyw0kCkrkhEgx2GvIMT8irCUJcklrb5SoIMx0XEPx9GlAzZ1WlJRMAlL9o8+91mSQ3mtJRBBtOp7i8n/2D4ESDQSBMTQIfQPqc6QlyFCty6fc9VdBYZQSwgbpvZ70RBFg1Ope/cxF1lqyIgoaoyrF3XFF2Q57pUWI0ap581NJ2SlZISlWGE0tyTZ49qRYYpiCzJgUBQa11s2WdUx4UeuaCcUDg6ymaV2jtzAlBLfG5ISokzJiWrwx2HqIpIwAA4CQ1padEEhSIqP0xBAropISCQYEoa2pOCGwpJzvrL3fhQQiHD9G9XPdKU8R1ANIH7HULs4axgBCnQyYKLJ9lZC0QEYA58tFTOyP8WADecBQ2ptD8U0g0Ak5X6T4rp7SYwMdg57MJglZAcYEwjIhM6OYYlisIaWOMnobM4fwSsgd0Cg4bgimuwTGohsVpgtEz4REa2tdAa7FCHUxN1LoFEX/eeE3hoyOlYfeVSD8jFmNLUGCiSdIMJB3Az+ndAmyQLEAAAAASUVORK5CYII=")
-
 ## run the main applications
+def is_square():
+    """True on a 64x64 panel.
+
+    Panels are told apart by SHAPE, never by size: the 128x64 wide panel is
+    also 64 tall.
+    """
+    w, h = canvas.size()
+    return h == w
+
 def main(config):
     scale = 2 if canvas.is2x() else 1
     jsonLocation = json.decode(config.str("location") or DEFAULT_LOCATION)  ## set the location from the schema data or use the default
@@ -57,7 +66,10 @@ def main(config):
     return render.Root(
         delay = 5000,
         show_full_animation = True,
-        child = render.Animation(columnFrames),
+        # Every frame is laid out for 32 rows (or 64 at 2x); on a square
+        # panel, which is 64 tall but not 2x, each is centred rather than
+        # hung from the top edge.
+        child = render.Animation([render.Box(height = canvas.height(), child = f) for f in columnFrames] if is_square() else columnFrames),
     )
 
 def get_schema():
@@ -72,7 +84,7 @@ def get_schema():
             ),
             schema.Text(
                 id = "display_name",
-                name = "Display Nmae",
+                name = "Display Name",
                 desc = "A custom display name",
                 icon = "quoteRight",
             ),
@@ -95,39 +107,20 @@ def get_alerts(lat, long):
     ## master list
     alerts = []
 
-    ## check cache, 5 minutes TTL
-    cachekey = "lawnchairs.severewxalertsusa." + truncatedLat + "." + truncatedLong  ##cache key is for a lat/long pair
+    ## Get the alerts for the lat/long point and append them to the alerts dictionary.
 
-    if (cache.get(cachekey) != None):
-        ## cache hit
-        alerts = json.decode(cache.get(cachekey))
-        return alerts
+    pointAlertsResponse = http.get("https://api.weather.gov/alerts/active?point=" + truncatedLat + "," + truncatedLong, ttl_seconds = 300)
 
-    else:
-        ## cache miss
+    if "features" not in pointAlertsResponse.json():
+        return []
+    for item in pointAlertsResponse.json()["features"]:
+        ## filter out test alerts
+        if (item["properties"]["status"] == "Test"):
+            continue
+        else:
+            alerts.append(item)
 
-        ## Get the alerts for the lat/long point and append them to the alerts dictionary.
-
-        pointAlertsResponse = http.get("https://api.weather.gov/alerts/active?point=" + truncatedLat + "," + truncatedLong)
-
-        if "features" not in pointAlertsResponse.json():
-            return []
-        for item in pointAlertsResponse.json()["features"]:
-            ## filter out test alerts
-            if (item["properties"]["status"] == "Test"):
-                continue
-            else:
-                alerts.append(item)
-
-        # set cache. cast object to jsonstring
-        # TODO: Determine if this cache call can be converted to the new HTTP cache.
-        cache.set(
-            key = cachekey,
-            value = json.encode(alerts),
-            ttl_seconds = 300,
-        )
-
-        return alerts
+    return alerts
 
 ## Render the alert frame
 def render_alert(alert, alertIndex, totalAlerts, scale = 1):

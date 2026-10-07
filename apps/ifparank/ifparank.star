@@ -5,14 +5,13 @@ Summary: Display IFPA Ranking
 Description: Display an International Flipper Pinball Association (IFPA) World Ranking.
 """
 
-load("cache.star", "cache")
-load("encoding/base64.star", "base64")
 load("encoding/json.star", "json")
 load("http.star", "http")
+load("images/pin_icon.png", PIN_ICON_ASSET = "file")
 load("render.star", "render")
 load("schema.star", "schema")
 
-PIN_ICON = base64.decode("""iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAYAAADE6YVjAAAAAXNSR0IArs4c6QAAANJJREFUSEvV1tENhCAMBuBjI+ZgGIZhGOZgo7uUpKbWtoBUk7snc5p+/lUp4TPxizF+tctaa2FUwrwAi+ec1TqllH7OwkRkpjhXLeyCAGDd+ag1gPFUJ2QEpJRORq1VNDl0ICOAVpvBKHQLQZBiPNUFWUkh9QcxDepJdhGoIUGYJngAGgL/A+SGWGn+D8E09AVwb9driLSmuT4T6Rvq7fL6TjQAFsv3kCfSuC2Q1mwREc806jzBu9pdy4aTkUJwvDKGl2Y87fPMhuL2boU/0N191w+8LrYDiiRhIgAAAABJRU5ErkJggg==""")
+PIN_ICON = PIN_ICON_ASSET.readall()
 
 def main(config):
     apiKey = config.get("ifpa_api_key")
@@ -24,16 +23,11 @@ def main(config):
     IFPA_URL = "https://api.ifpapinball.com/v1/player/" + playerId + "?api_key=" + apiKey
 
     # Keep a cache of the JSON response from the IFPA servers. Key is the user ID, value is the response as a String
-    ifpaCache = cache.get(playerId + "ifpaKey")
-    if ifpaCache == None:
-        #        print ("Calling IFPA API")
-        res = http.get(IFPA_URL)
-        if res.status_code != 200:
-            fail("IFPA request failed: statusCode =", res.status_code)
-        ifpaCache = json.encode(res.json())  #res.json() converts to dict, but store in cache as a string
-
-        # TODO: Determine if this cache call can be converted to the new HTTP cache.
-        cache.set(playerId + "ifpaKey", str(ifpaCache), ttl_seconds = 43200)  # every 12 hours
+    #        print ("Calling IFPA API")
+    res = http.get(IFPA_URL, ttl_seconds = 43200)
+    if res.status_code != 200:
+        fail("IFPA request failed: statusCode =", res.status_code)
+    ifpaCache = json.encode(res.json())  #res.json() converts to dict, but store in cache as a string
 
     #    else :
     #        print ("Using cache")

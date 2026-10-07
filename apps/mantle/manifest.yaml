@@ -6,4 +6,10 @@ desc: Track important revenue metrics. Manage plans and pricing. Improve custome
 author: Mantle Rev Ops
 fileName: mantle.star
 packageName: mantle
-recommended_interval: 5
+recommendedInterval: 5
+category: finance
+tags:
+  - finance
+  - tech
+published: '2024-01-23T18:07:15Z'
+updated: '2025-12-23T13:24:18Z'

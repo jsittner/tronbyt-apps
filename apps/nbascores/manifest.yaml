@@ -6,4 +6,13 @@ desc: Creating multiple app instances is no longer necessary. Just install once 
 author: LunchBox8484
 fileName: nba_scores.star
 packageName: nbascores
-recommended_interval: 5
+recommendedInterval: 5
+supports2x: true
+category: sports
+tags:
+  - utility
+  - clock
+  - nba
+  - basketball
+published: '2022-04-27T14:37:57Z'
+updated: '2026-09-19T17:20:14Z'

@@ -173,7 +173,7 @@ def get_oncall_shifts(config, profile_id = None, offset = 0, limit = 100, shifts
     if cached_shifts:
         return json.decode(cached_shifts)
 
-    tz = config.get("$tz", DEFAULT_TIMEZONE)
+    tz = time.tz()
     now = time.now().in_location(tz).format("2006-01-02T15:04:05Z07:00")
     url = "%s/oncalls?%searliest=true&since=%s&until=%s&overflow=true&offset=%i&limit=%i" % (
         PAGERDUTY_BASE_URL,
@@ -199,7 +199,6 @@ def get_oncall_shifts(config, profile_id = None, offset = 0, limit = 100, shifts
 
     shifts = sorted(shifts, key = sort_by_level)
 
-    # TODO: Determine if this cache call can be converted to the new HTTP cache.
     cache.set("%s|shifts" % access_token, json.encode(shifts), DEFAULT_CACHE_TTL)
     return shifts
 
@@ -317,7 +316,7 @@ def get_state(config):
 
 # buildifier: disable=function-docstring
 def main(config):
-    timezone = config.get("$tz", DEFAULT_TIMEZONE)
+    timezone = time.tz()
     data = get_state(config)
 
     # don't show the app if we didn't get any data

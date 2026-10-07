@@ -6,4 +6,11 @@ desc: Display Gartner News Feed.
 author: Robert Ison
 fileName: gartner_news.star
 packageName: gartnernews
-recommended_interval: 5
+recommendedInterval: 5
+broken: true
+category: news
+tags:
+  - news
+  - tech
+published: '2023-02-21T18:32:02Z'
+updated: '2026-01-22T13:33:56Z'

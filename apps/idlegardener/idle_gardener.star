@@ -6,19 +6,21 @@ Author: yonodactyl
 """
 
 load("cache.star", "cache")
-
-# LOAD MODULES
-load("encoding/base64.star", "base64")
 load("encoding/json.star", "json")
+load("images/tree_chopped_c3e9b02b.png", TREE_CHOPPED_c3e9b02b_ASSET = "file")
+load("images/tree_growing_6ea9c186.png", TREE_GROWING_6ea9c186_ASSET = "file")
+load("images/tree_grown.png", TREE_GROWN_ASSET = "file")
 load("random.star", "random")
 load("render.star", "render")
 load("schema.star", "schema")
 load("time.star", "time")
 
+TREE_GROWN = TREE_GROWN_ASSET.readall()
+
 # CONSTANTS
-TREE_GROWN = "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAAEFJREFUGJVjYCAAGGGM5GO+/5El5lptZmRgYGBgImQCC4xxfu0PrAqIN+H5qV8M0Uy/GBgYGBiW/mPDVIAuQTQAABWCDdre18jnAAAAAElFTkSuQmCC"
-TREE_CHOPPED = "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAAD5JREFUGJVjYBh4wAhjSNra/59vJMjAwMDAkHjuPcPzwwcZGRgYGFiQVe+58BLKYsNunKSt/X9JW/v/JLkBAH+gDKm0ZxVNAAAAAElFTkSuQmCC"
-TREE_GROWING = "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAAFZJREFUGJVjYCAGJB/z/Y+Pz8DAwMCwIz/gPzINA4wwHYKVbxhcDMThEh4TNzAyMDAwsDAwMDDMtdrMCBG2xDCaCcaQtLWHSy79x4bdsZK29v+RFRIFADSSGQajlomuAAAAAElFTkSuQmCC"
+
+TREE_CHOPPED = TREE_CHOPPED_c3e9b02b_ASSET.readall()
+TREE_GROWING = TREE_GROWING_6ea9c186_ASSET.readall()
 
 GROWN_STATE = "GROWN"
 GROWING_STATE = "GROWING"
@@ -50,21 +52,18 @@ def return_tree_states(id):
 
     # No cache exist - set to zero
     if chopped_count == None:
-        # TODO: Determine if this cache call can be converted to the new HTTP cache.
         cache.set("{id}-chopped_count".format(id = id), "0", ttl_seconds = 86400)
 
     # No cache exist - generate a new list of trees
     if cached_trees == None:
         encoded_list = generate_tree_list()
 
-        # TODO: Determine if this cache call can be converted to the new HTTP cache.
         cache.set("{id}-tree_list".format(id = id), encoded_list, ttl_seconds = 86400)
         return encoded_list
 
     # Found a cache and will use this data.
     updated_tree_list = update_tree_states(cached_trees, id)
 
-    # TODO: Determine if this cache call can be converted to the new HTTP cache.
     cache.set("{id}-tree_list".format(id = id), updated_tree_list, ttl_seconds = 86400)
     return updated_tree_list
 
@@ -78,7 +77,7 @@ def return_trees(tree_list):
         children = [
             render.Row(
                 children = [
-                    render.Image(src = base64.decode(tree["sprite"]))
+                    render.Image(src = tree["sprite"])
                     for tree in column
                 ],
             )
@@ -98,7 +97,7 @@ def return_chopped_count(config, id):
             pad = (0, 0, 0, 0),
             child = render.Row(
                 children = [
-                    render.Image(src = base64.decode(TREE_GROWN), width = 8),
+                    render.Image(src = TREE_GROWN, width = 8),
                     render.Marquee(
                         width = 56,
                         child = render.Row(
@@ -126,7 +125,6 @@ def increment_chopped_count(garden_id):
         temp_count = int(chopped_count)
         temp_count += 1
 
-        # TODO: Determine if this cache call can be converted to the new HTTP cache.
         cache.set("{id}-chopped_count".format(id = garden_id), str(temp_count), ttl_seconds = 86400)
 
 # Tree Growth Methods

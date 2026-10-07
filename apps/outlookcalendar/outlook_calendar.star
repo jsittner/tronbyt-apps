@@ -6,15 +6,15 @@ Description: Shows the date, next meeting and time from your Outlook Calendar.
 """
 
 load("cache.star", "cache")
-load("encoding/base64.star", "base64")
 load("encoding/json.star", "json")
 load("http.star", "http")
+load("images/cal_icon.png", CAL_ICON_ASSET = "file")
 load("render.star", "render")
 load("schema.star", "schema")
 load("secret.star", "secret")
 load("time.star", "time")
 
-CAL_ICON = base64.decode("""iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAAAAXNSR0IArs4c6QAAAOlJREFUaEPtl0EKg1AMRPUW3Xsv957i80/Rfe/VvbewKG1RERO+TzEwrj6SPxlnJgHr6sQnpTTknOuxBXWm6U7kkOfVD2uc9H5Wuemm19R50aN9HOZ/GOBPaBRgRYhyfY6z16/EyFMFKCHkvrMhuPvurFAClKi2eQdyxM0H6qcEuBW3CiFHrDZagj8FIME1Au7IWYWQI1YbjYBG4KsAlDjtAPfMWYWQI1abe+8AN3uo8FZ/g9A3XQ3D7YCrmUP9JAAkZFgYJSCsdRBxJQASMiyMEhDWOoi4EgAJGRZGCQhrHURcCYCEDAvzAXMPoSHYT20lAAAAAElFTkSuQmCC""")
+CAL_ICON = CAL_ICON_ASSET.readall()
 
 # Enable Print statements for key data
 DEBUG_ON = 1
@@ -116,7 +116,7 @@ def main(config):
     outlook_refresh_token = config.get("auth") or config.get("outlook_refresh_token")
 
     # Capture the user's time zone.   Allow timezone to be passed via command line for debug and test
-    timezone = config.get("time_zone") if config.get("time_zone") else config.get("$tz", DEFAULT_TIMEZONE)
+    timezone = config.get("time_zone") if config.get("time_zone") else time.tz()
 
     # At present this application checks the calendar from the current time until end of day.
     # RFC3339 format works with MSFT Graph API calls (default Starlark time object does not)
@@ -173,7 +173,6 @@ def main(config):
         # Grab new Oauthtoken from the Google Token service, format for Data Aggregation API call.
         OUTLOOK_ACCESS_TOKEN = "Bearer {}".format(refresh.json()["access_token"])
 
-        # TODO: Determine if this cache call can be converted to the new HTTP cache.
         cache.set(outlook_refresh_token, OUTLOOK_ACCESS_TOKEN, ttl_seconds = int(refresh.json()["expires_in"] - 30))
 
         # HM, is this ELSE path ever taken or leftover prior to inserting the else condition of the refresh token check?
@@ -346,7 +345,6 @@ def oauth_handler(params):
     token_params = res.json()
     refresh_token = token_params["refresh_token"]
 
-    # TODO: Determine if this cache call can be converted to the new HTTP cache.
     cache.set(refresh_token, "Bearer " + token_params["access_token"], ttl_seconds = int(token_params["expires_in"] - 30))
 
     return refresh_token
@@ -421,7 +419,7 @@ def get_outlook_event_list(start_window, end_window, auth_token, todays_date):
         # Also, MSFT generated "Focus Time" shows as 1 attendee, where as MF + Rachel entered morning prep, coding/training shows up as 0 attendees.   Hm.....may need to specifically filter on "Focus Time", dont count as a meeting.
         # Same for "meetings" with Zero attendees.
 
-        CalendarQuery = http.get(next_graph_event_link, headers = OUTLOOK_EVENT_HEADERS)
+        CalendarQuery = http.get(next_graph_event_link, headers = OUTLOOK_EVENT_HEADERS, ttl_seconds = 60)
         if CalendarQuery.status_code != 200:
             cal_failure_code = str(CalendarQuery.status_code)
             cal_failure_error_description = CalendarQuery.json()["error_description"]

@@ -6,4 +6,13 @@ desc: Displays recently added on Jellyfin server. Recommended to run Tronbyt on 
 author: noahpodgurski
 fileName: jellyfin_recently_added.star
 packageName: jellyfinrecentlyadded
-recommended_interval: 720
+recommendedInterval: 720
+category: utilities
+tags:
+  - jellyfin
+  - media
+  - utility
+  - tech
+  - art
+published: '2025-11-06T05:55:19Z'
+updated: '2025-12-05T22:28:51Z'

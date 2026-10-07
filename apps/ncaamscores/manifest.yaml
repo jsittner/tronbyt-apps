@@ -6,4 +6,12 @@ desc: Creating multiple app instances is no longer necessary. Just install once 
 author: LunchBox8484
 fileName: ncaam_scores.star
 packageName: ncaamscores
-recommended_interval: 5
+recommendedInterval: 5
+category: sports
+tags:
+  - real-time
+  - art
+  - nba
+  - basketball
+published: '2022-11-10T15:12:34Z'
+updated: '2026-09-19T17:20:14Z'

@@ -6,4 +6,12 @@ desc: Display quotes from a Gsheet like this https://docs.google.com/spreadsheet
 author: vipulchhajer
 fileName: custom_quotes.star
 packageName: customquotes
-recommended_interval: 5
+recommendedInterval: 5
+category: utilities
+tags:
+  - art
+  - lifestyle
+  - utility
+  - smart-home
+published: '2024-05-22T18:15:56Z'
+updated: '2025-12-01T21:50:01Z'

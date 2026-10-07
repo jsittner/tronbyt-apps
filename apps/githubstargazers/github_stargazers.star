@@ -5,17 +5,16 @@ Description: Display the GitHub stargazer count for a repo.
 Author: fulghum
 """
 
-load("cache.star", "cache")
-load("encoding/base64.star", "base64")
 load("encoding/json.star", "json")
 load("http.star", "http")
 load("humanize.star", "humanize")
+load("images/github_image.png", GITHUB_IMAGE_ASSET = "file")
 load("render.star", "render")
 load("schema.star", "schema")
 
-GITHUB_REPO_SEARCH_URL = "https://api.github.com/search/repositories?q=%s"
+GITHUB_IMAGE = GITHUB_IMAGE_ASSET.readall()
 
-GITHUB_IMAGE = base64.decode("iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAz1BMVEVAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMBAeMD///8e3z+UAAAAQ3RSTlMALZHU9JAsB5b9lQa+vZfPZ9Ht7NVoyZSZAxAPBPwrnZOOJhzT8ur1+wUC10lB3Cklki6FrbI2M7D6NLwVFNBLAf6AQ5ZiAAAAAAFiS0dERPm0mMEAAAAHdElNRQfmDAMUOiNHbbR3AAAArklEQVQY0z2P1xaCQAxEB0FhsVewVwR77535/39yQfC+bGayyZkAEiWhapqaTOGHbgiGCDMd6gz/ZAMnx3yhyFKZlWqNlpwXtFFvAM0WEmx3kCS70TL0yD4q5CA2huQIDjX8GdOBS28S66kruzNyHhsLUoVJLlc/vZbNDbZit/cOR+B0vsiwHcC4XO3bHXgEUa0w+vO1eMtCXnTTw2NMwZZ8P8LSo+2KH/zwlaD+AhuBGQTkgvNPAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDIyLTEyLTAzVDIwOjQxOjQ2KzAwOjAwQzjB5gAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyMi0xMi0wM1QyMDozMjoxNiswMDowMLiJ2b4AAAAodEVYdGRhdGU6dGltZXN0YW1wADIwMjItMTItMDNUMjA6NTg6MzUrMDA6MDBjxr8LAAAAAElFTkSuQmCC")
+GITHUB_REPO_SEARCH_URL = "https://api.github.com/search/repositories?q=%s"
 
 def get_stargazers_count(org_name, repo_name, config):
     query_params = "repo:%s/%s" % (org_name, repo_name)
@@ -38,6 +37,7 @@ def send_github_request(url, query_params, config):
     res = http.get(
         url = url % humanize.url_encode(query_params),
         headers = headers,
+        ttl_seconds = 300,
     )
     if res.status_code != 200:
         print("GitHub API request failed: %s - %s " % (res.status_code, res.body()))
@@ -50,14 +50,7 @@ def main(config):
     repo_name = config.get("repo_name", "apps")
 
     print("Fetching GitHub stargazer count...")
-    cache_key = "repo_stargazers_%s/%s" % (org_name, repo_name)
-    stargazers_count = cache.get(cache_key)
-
-    if stargazers_count == None:
-        stargazers_count = get_stargazers_count(org_name, repo_name, config)
-
-        # TODO: Determine if this cache call can be converted to the new HTTP cache.
-        cache.set(cache_key, str(stargazers_count), ttl_seconds = 300)
+    stargazers_count = get_stargazers_count(org_name, repo_name, config)
 
     image_size = 16
     msg = "%s stars" % humanize.comma(stargazers_count)

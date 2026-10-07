@@ -6,4 +6,10 @@ desc: Displays live and upcoming CFL scores from a data feed.
 author: LunchBox8484
 fileName: cfl_scores.star
 packageName: cflscores
-recommended_interval: 5
+recommendedInterval: 5
+category: sports
+tags:
+  - cfl
+  - football
+published: '2024-04-25T18:15:24Z'
+updated: '2026-09-19T17:20:14Z'

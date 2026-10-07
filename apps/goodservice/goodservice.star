@@ -5,9 +5,11 @@ Description: More accurate realtime New York City Subway arrival times for a sel
 Author: blahblahblah-
 """
 
-load("encoding/base64.star", "base64")
 load("encoding/json.star", "json")
 load("http.star", "http")
+load("images/diamond_green.png", DIAMOND_GREEN_ASSET = "file")
+load("images/diamond_orange.png", DIAMOND_ORANGE_ASSET = "file")
+load("images/diamond_purple.png", DIAMOND_PURPLE_ASSET = "file")
 load("re.star", "re")
 load("render.star", "render")
 load("schema.star", "schema")
@@ -56,9 +58,9 @@ ABBREVIATIONS = {
 }
 
 DIAMONDS = {
-    "#00933c": "iVBORw0KGgoAAAANSUhEUgAAAAsAAAALCAYAAACprHcmAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAcElEQVQYlX3QsRHCMAxA0YcWAfagADaBleg5MgkciwRvQpNwjnCsTuf3C3njdpBmizuuKPVDNOATZ7ymvYlnuJ/2XQ5iBWoF0YF/QeDRgXUwhMbVjSm4BEYcO0HBCeN84Gcl+EGWX5eDBcy4Dt4ZwhdZ8R3soZmzOQAAAABJRU5ErkJggg==",
-    "#b933ad": "iVBORw0KGgoAAAANSUhEUgAAAAsAAAALCAYAAACprHcmAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAc0lEQVQYlX3QwREBQRBA0acTQQwSQCYEpghAAE6URNZk4rKrZtvs9K1r3j/0rB67uzRrXHBGqR+iAZ844jXuTTzB7bhvchALUCuIDvwLAtcOrINbaFzdmIJTYMC+ExQcMEwHfhaCH2T+dTmYwYzr4J0hfAHfSh628EQX+AAAAABJRU5ErkJggg==",
-    "#ff6319": "iVBORw0KGgoAAAANSUhEUgAAAAsAAAALCAYAAACprHcmAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAcElEQVQYlX3QwREBQRBA0aezcEImyAR5KSKhJLImEi67arbNTt+65v1Dz+pzWUuzwRVnlPohGvCBI57j3sQT3I37NgexALWC6MC/IHDrwDq4h8bVjSk4BQbsO0HBAcN04Hsh+EHmX5eDGcy4Dl4ZwhemXh6YbpNeCwAAAABJRU5ErkJggg==",
+    "#00933c": DIAMOND_GREEN_ASSET.readall(),
+    "#b933ad": DIAMOND_PURPLE_ASSET.readall(),
+    "#ff6319": DIAMOND_ORANGE_ASSET.readall(),
 }
 
 def main(config):
@@ -197,7 +199,7 @@ def main(config):
                     bullet = render.Stack(
                         children = [
                             render.Image(
-                                src = base64.decode(DIAMONDS[route_color]),
+                                src = DIAMONDS[route_color],
                             ),
                             render.Padding(
                                 pad = (4, 2, 0, 0),

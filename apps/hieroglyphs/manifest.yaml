@@ -6,4 +6,13 @@ desc: Displays Egyptian Hieroglyphs from Gardiner's Sign List plus details of pr
 author: dinosaursrarr
 fileName: hieroglyphs.star
 packageName: hieroglyphs
-recommended_interval: 5
+recommendedInterval: 5
+category: education
+tags:
+  - ancient
+  - local
+  - education
+  - news
+  - utility
+published: '2024-01-07T17:22:35Z'
+updated: '2025-12-01T21:50:01Z'

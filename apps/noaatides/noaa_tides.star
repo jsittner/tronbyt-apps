@@ -211,12 +211,6 @@ def main(config):
     #     debug_print("pulling fresh tide data")
     tides_hilo = get_tides_hilo(station_id)
     tides_graph = get_tides_graph(station_id)
-    # if tides_hilo != None:
-    #     # TODO: Determine if this cache call can be converted to the new HTTP cache.
-    #     cache.set(cache_key_hilo, json.encode(tides_hilo), ttl_seconds = 14400)  # 4 hours
-
-    #     # TODO: Determine if this cache call can be converted to the new HTTP cache.
-    #     cache.set(cache_key_graph, json.encode(tides_graph), ttl_seconds = 14400)  # 4 hours
 
     debug_print("Tides HILO : " + str(tides_hilo))
     debug_print("Tides GRAPH: " + str(tides_graph))
@@ -237,6 +231,7 @@ def main(config):
             lines.append(render.Text(content = station_name, color = color_label, font = "tom-thumb"))
 
     points = []
+    total_points = 0
 
     # generate up HILO lines
     debug_print("generating hilos")
@@ -346,6 +341,7 @@ def main(config):
     if config.bool("display_graph") and len(points) > 0:  # panic if we try to render an empty graph object
         # Calculate current time position on the graph (graph x-axis is 0-64 pixels for 24 hours)
         current_time_x = None
+        current_tide_height = 0
         if tides_graph != None and "predictions" in tides_graph and len(tides_graph["predictions"]) > 0:
             # Get current time in local timezone (NOAA returns times in local station time)
             current_time = time.now()

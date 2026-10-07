@@ -6,4 +6,11 @@ desc: Display the days, hours, and minutes remaining to a specified event.
 author: CubsAaron
 fileName: countdown_clock.star
 packageName: countdownclock
-recommended_interval: 0
+recommendedInterval: 0
+category: clocks
+tags:
+  - time
+  - utility
+  - tracking
+published: '2022-03-13T21:43:26Z'
+updated: '2025-12-05T22:28:51Z'

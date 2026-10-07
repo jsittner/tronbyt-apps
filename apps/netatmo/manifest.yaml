@@ -6,4 +6,10 @@ desc: Get your current weather from your Netatmo weather station.
 author: danmcclain
 fileName: netatmo.star
 packageName: netatmo
-recommended_interval: 5
+recommendedInterval: 5
+category: utilities
+tags:
+  - weather
+  - smart-home
+published: '2022-02-28T19:38:45Z'
+updated: '2025-12-23T13:24:18Z'

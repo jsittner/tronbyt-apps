@@ -112,7 +112,10 @@ FONT = "tom-thumb"
 SIX_HOURS = 60 * 60 * 6
 
 def extract_int(s):
-    return int("".join([c for c in s.elems() if c.isdigit()]))
+    digits = "".join([c for c in s.elems() if c.isdigit()])
+    if not digits:
+        return 0
+    return int(digits)
 
 def extract_percentage(s):
     return float(s.strip().removesuffix("%").strip()) / 100.0
@@ -277,8 +280,8 @@ def new_statesman_predictions():
     predictions = {}
     for card in j[CARDS]:
         predictions[card[CATEGORY]] = {
-            SEATS: extract_int(card[TEXT][2]),
-            VOTE_SHARE: extract_percentage(card[TEXT][0]),
+            SEATS: extract_int(card[TEXT][3]),
+            VOTE_SHARE: extract_percentage(card[TEXT][1]),
         }
     return predictions
 

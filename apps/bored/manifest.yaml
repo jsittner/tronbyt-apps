@@ -6,4 +6,12 @@ desc: This app will give you things to do suggestion if you're bored. Or add you
 author: AndersHeie
 fileName: bored.star
 packageName: bored
-recommended_interval: 5
+recommendedInterval: 5
+category: lifestyle
+tags:
+  - productivity
+  - art
+  - music
+  - lifestyle
+published: '2023-01-23T18:07:14Z'
+updated: '2025-12-02T19:30:22Z'

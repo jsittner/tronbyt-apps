@@ -6,4 +6,11 @@ desc: Pulls the current hour average price from hourlypricing.comed.com.
 author: Andrew Hill
 fileName: comed_price.star
 packageName: comedprice
-recommended_interval: 5
+recommendedInterval: 5
+category: utilities
+tags:
+  - utility
+  - electricity
+  - tracking
+published: '2023-07-10T13:40:58Z'
+updated: '2025-12-02T19:30:22Z'

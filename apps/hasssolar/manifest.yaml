@@ -6,4 +6,13 @@ desc: Energy production and consumption monitor using Home Assistant.
 author: Ingmar Stein
 fileName: hass_solar.star
 packageName: hasssolar
-recommended_interval: 5
+recommendedInterval: 5
+supports2x: true
+minPixletVersion: v0.49.0
+category: utilities
+tags:
+  - smart-home
+  - tracking
+  - wide 2x support
+published: '2024-07-22T14:33:33Z'
+updated: '2026-01-30T03:27:39Z'

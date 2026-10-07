@@ -6,4 +6,11 @@ desc: Displays the current Office of Personnel Management status, which is used 
 author: AdamMoses-GitHub
 fileName: opm_status.star
 packageName: opmstatus
-recommended_interval: 5
+recommendedInterval: 5
+category: utilities
+tags:
+  - local
+  - weather
+  - notification
+published: '2023-01-23T21:58:05Z'
+updated: '2025-12-05T22:28:51Z'
