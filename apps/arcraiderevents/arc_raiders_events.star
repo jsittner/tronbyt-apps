@@ -1,7 +1,7 @@
 """
 Applet: ARC Raid Events
 Summary: ARC Raiders event timers
-Description: Displays active and upcoming ARC Raiders in-game events with live countdown timers. Features official brand colors, logo-stripe accents, scrolling event names, and map locations. Filter by map with the configurable dropdown. Data sourced from MetaForge.app.
+Description: Displays active and upcoming ARC Raiders in-game events with live countdown timers. Features official brand colors, logo-stripe accents, scrolling event names, and map locations. Filter by map and server region with the configurable dropdowns. Data sourced from MetaForge.app.
 Author: jeffver
 """
 
@@ -14,6 +14,13 @@ load("time.star", "time")
 
 API_URL = "https://metaforge.app/api/arc-raiders/events-schedule"
 CACHE_TTL = 300  # 5 minutes
+
+# Server region. Map conditions run on per-region schedules since patch 1.42.0.
+# MetaForge defaults to "europe" when no region is sent.
+# VERIFY this value: check the events-schedule request in browser DevTools on
+# metaforge.app/arc-raiders/event-timers with North America selected.
+DEFAULT_REGION = "north-america"
+REGION_PARAM = "region"
 
 # ARC Raiders brand colors (from logo stripes)
 ARC_CYAN = "#00e5ff"  # Leftmost stripe
@@ -40,6 +47,7 @@ MAP_SHORT = {
     "Buried City": "BCTY",
     "Blue Gate": "BGAT",
     "Stella Montis": "SMON",
+    "Riven Tides": "RTID",
 }
 
 # Event short names
@@ -58,6 +66,7 @@ EVENT_SHORT = {
     "Prospecting Probes": "PROBES",
     "Uncovered Caches": "CACHES",
     "Lush Blooms": "LUSH BLOOM",
+    "Beachcombing": "BEACHCOMB",
 }
 
 def get_short_map(map_name):
@@ -76,12 +85,10 @@ def format_countdown(ms_remaining):
     """Format milliseconds remaining into a readable countdown."""
     if ms_remaining <= 0:
         return "NOW"
-
     total_seconds = int(ms_remaining / 1000)
     hours = int(total_seconds / 3600)
     minutes = int((total_seconds % 3600) / 60)
     seconds = total_seconds % 60
-
     if hours > 0:
         return str(hours) + ":" + pad_zero(minutes) + ":" + pad_zero(seconds)
     elif minutes > 0:
@@ -95,40 +102,55 @@ def truncate_name(name, max_chars):
         return name[:max_chars] + ".."
     return name
 
+def error_screen(message):
+    return render.Root(
+        child = render.Box(
+            render.Column(
+                cross_align = "center",
+                main_align = "center",
+                children = [
+                    render.Text("ARC RAIDERS", color = ARC_RED, font = "tom-thumb"),
+                    render.Box(width = 64, height = 1, color = DARK_GRAY),
+                    render.Text(message, color = ARC_YELLOW, font = "tom-thumb"),
+                ],
+            ),
+        ),
+    )
+
+def fetch_events(region):
+    """Fetch the event schedule for a region, with per-region caching."""
+    cache_key = "arc_events_" + region
+    cached = cache.get(cache_key)
+    if cached != None:
+        return json.decode(cached)
+
+    rep = http.get(API_URL, params = {REGION_PARAM: region})
+    if rep.status_code != 200:
+        return None
+
+    body = rep.json()
+    events = body
+    if type(body) == "dict":
+        got = body.get("region")
+        if got and got != region:
+            print("arc_raiders_events: region mismatch, asked %s, got %s" % (region, got))
+        events = body.get("data", [])
+
+    cache.set(cache_key, json.encode(events), ttl_seconds = CACHE_TTL)
+    return events
+
 def main(config):
     # Get current time in milliseconds
     now = time.now()
     now_ms = now.unix_nano // 1000000
 
-    # Get optional map filter from config
+    # Config
     map_filter = config.get("map_filter", "All")
+    region = config.get("region", DEFAULT_REGION)
 
-    # Try cache first
-    cached = cache.get("arc_events")
-    if cached != None:
-        events = json.decode(cached)
-    else:
-        rep = http.get(API_URL)
-        if rep.status_code != 200:
-            return render.Root(
-                child = render.Box(
-                    render.Column(
-                        cross_align = "center",
-                        main_align = "center",
-                        children = [
-                            render.Text("ARC RAIDERS", color = ARC_RED, font = "tom-thumb"),
-                            render.Box(width = 64, height = 1, color = DARK_GRAY),
-                            render.Text("API ERROR", color = ARC_YELLOW, font = "tom-thumb"),
-                        ],
-                    ),
-                ),
-            )
-        events = rep.json()
-        if type(events) == "dict" and "data" in events:
-            events = events["data"]
-
-        # Cache the response
-        cache.set("arc_events", json.encode(events), ttl_seconds = CACHE_TTL)
+    events = fetch_events(region)
+    if events == None:
+        return error_screen("API ERROR")
 
     # Filter by map if specified
     if map_filter != "All":
@@ -137,11 +159,9 @@ def main(config):
     # Separate into active and upcoming events
     active_events = []
     upcoming_events = []
-
     for event in events:
         start = int(event["startTime"])
         end = int(event["endTime"])
-
         if start <= now_ms and now_ms < end:
             active_events.append(event)
         elif start > now_ms and len(upcoming_events) < 6:
@@ -149,7 +169,6 @@ def main(config):
 
     # Build event list for display
     display_events = []
-
     for event in active_events[:3]:
         display_events.append({
             "name": event["name"],
@@ -292,6 +311,16 @@ def main(config):
     )
 
 def get_schema():
+    # Region values other than the default are unverified guesses in the same
+    # slug style; adjust to match what the MetaForge API actually accepts.
+    regions = [
+        schema.Option(display = "North America", value = "north-america"),
+        schema.Option(display = "Europe", value = "europe"),
+        schema.Option(display = "South America", value = "south-america"),
+        schema.Option(display = "Asia", value = "asia"),
+        schema.Option(display = "Oceania", value = "oceania"),
+    ]
+
     maps = [
         schema.Option(display = "All Maps", value = "All"),
         schema.Option(display = "Dam", value = "Dam"),
@@ -299,11 +328,20 @@ def get_schema():
         schema.Option(display = "Buried City", value = "Buried City"),
         schema.Option(display = "Blue Gate", value = "Blue Gate"),
         schema.Option(display = "Stella Montis", value = "Stella Montis"),
+        schema.Option(display = "Riven Tides", value = "Riven Tides"),
     ]
 
     return schema.Schema(
         version = "1",
         fields = [
+            schema.Dropdown(
+                id = "region",
+                name = "Server Region",
+                desc = "Event schedule for your server region",
+                icon = "globe",
+                default = DEFAULT_REGION,
+                options = regions,
+            ),
             schema.Dropdown(
                 id = "map_filter",
                 name = "Map Filter",
