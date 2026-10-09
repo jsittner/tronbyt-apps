@@ -275,24 +275,17 @@ def main(config):
                                     render.Text(truncate_name(evt["name"], 15), color = name_color, font = "tom-thumb"),
                                     render.Box(width = 64, height = 1, color = "#806b00"),
                                     render.Box(width = 64, height = 1, color = "#801818"),
+                                    # Map name centered just below the stripe bars
+                                    render.Box(width = 64, height = 1),
+                                    render.Text(evt["map"], color = ARC_CYAN, font = "CG-pixel-3x5-mono"),
                                 ],
                             ),
-                            render.Stack(
+                            # Countdown alone on the bottom row, right-aligned
+                            render.Row(
+                                expanded = True,
+                                main_align = "end",
                                 children = [
-                                    render.Row(
-                                        expanded = True,
-                                        main_align = "start",
-                                        children = [
-                                            render.Text(evt["map"], color = ARC_CYAN, font = "CG-pixel-3x5-mono"),
-                                        ],
-                                    ),
-                                    render.Row(
-                                        expanded = True,
-                                        main_align = "end",
-                                        children = [
-                                            render.Text(suffix, color = suffix_color, font = "tom-thumb"),
-                                        ],
-                                    ),
+                                    render.Text(suffix, color = suffix_color, font = "tom-thumb"),
                                 ],
                             ),
                         ],
