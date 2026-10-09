@@ -76,6 +76,17 @@ def get_short_map(map_name):
 def get_short_event(event_name):
     return EVENT_SHORT.get(event_name, event_name[:12].upper())
 
+NAME_MAX_CHARS = 16  # tom-thumb is 4px per glyph, 64px wide
+
+def fit_event_name(name):
+    """Use the full name if it fits, else the short alias, else hard-truncate."""
+    if len(name) <= NAME_MAX_CHARS:
+        return name
+    short = EVENT_SHORT.get(name)
+    if short:
+        return short
+    return name[:NAME_MAX_CHARS]
+
 def pad_zero(n):
     """Pad a number with a leading zero if less than 10."""
     if n < 10:
@@ -272,27 +283,20 @@ def main(config):
                                 children = [
                                     render.Box(width = 64, height = 1, color = "#007380"),
                                     render.Box(width = 64, height = 1, color = "#007028"),
-                                    render.Text(truncate_name(evt["name"], 15), color = name_color, font = "tom-thumb"),
+                                    render.Text(fit_event_name(evt["name"]), color = name_color, font = "tom-thumb"),
                                     render.Box(width = 64, height = 1, color = "#806b00"),
                                     render.Box(width = 64, height = 1, color = "#801818"),
+                                    # Map name centered just below the stripe bars
+                                    render.Box(width = 64, height = 1),
+                                    render.Text(evt["map"], color = ARC_CYAN, font = "CG-pixel-3x5-mono"),
                                 ],
                             ),
-                            render.Stack(
+                            # Countdown alone on the bottom row, right-aligned
+                            render.Row(
+                                expanded = True,
+                                main_align = "end",
                                 children = [
-                                    render.Row(
-                                        expanded = True,
-                                        main_align = "start",
-                                        children = [
-                                            render.Text(evt["map"], color = ARC_CYAN, font = "CG-pixel-3x5-mono"),
-                                        ],
-                                    ),
-                                    render.Row(
-                                        expanded = True,
-                                        main_align = "end",
-                                        children = [
-                                            render.Text(suffix, color = suffix_color, font = "tom-thumb"),
-                                        ],
-                                    ),
+                                    render.Text(suffix, color = suffix_color, font = "tom-thumb"),
                                 ],
                             ),
                         ],
